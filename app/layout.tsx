@@ -3,6 +3,7 @@ import { Exo_2 } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "next-themes";
 import { Toaster } from "@/components/ui/sonner";
+import SchematicWrapper from "@/components/schematic/SchematicWrapper";
 
 /* fonts used if needed  reimport them
 const openSans = Open_Sans({
@@ -64,17 +65,19 @@ export default function RootLayout({ children }: Readonly<RootLayoutProps>) {
     <html lang="en" className={exo.variable} suppressHydrationWarning>
       {/* <body className="min-h-screen bg-background font-sans antialiased"> */}
       <body className={exo.className}>
-        <main className="relative flex min-h-screen flex-col">
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="light"
-            enableSystem
-            disableTransitionOnChange
-          >
-            {children}
-          </ThemeProvider>
-          <Toaster position="top-center" />
-        </main>
+        <SchematicWrapper>
+          <main className="relative flex min-h-screen flex-col">
+            <ThemeProvider
+              attribute="class"
+              defaultTheme="light"
+              enableSystem
+              disableTransitionOnChange
+            >
+              {children}
+            </ThemeProvider>
+            <Toaster position="top-center" />
+          </main>
+        </SchematicWrapper>
       </body>
     </html>
   );
