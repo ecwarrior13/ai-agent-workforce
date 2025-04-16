@@ -1,139 +1,104 @@
-# Project Template Planning
+# Agent Creation Dashboard Project Plan
 
-## Vision
+## Project Overview
 
-This project serves as a foundational template for modern web applications, incorporating best practices, scalable architecture, and a robust technology stack. It aims to provide a consistent starting point for various web projects while maintaining high code quality and developer experience.
+This project extends an existing Supabase-authenticated dashboard to include agent creation and management functionality. The system will allow users to create, view, and manage AI agents through a user-friendly interface.
 
-## Architecture
+## Architecture Components
 
-### Technology Stack
+### 1. Database Structure
 
-- **Framework**: Next.js 14 with App Router
-  - Leveraging server-side rendering and modern React features
-  - Utilizing the new App Router for enhanced routing capabilities
-- **Language**: TypeScript
+- **LLM Models Table**
 
-  - Strict type checking
-  - Enhanced IDE support and code reliability
+  - Primary key: model_id
+  - Fields:
+    - name (string)
+    - provider (string)
+    - description (text)
+    - is_available (boolean)
+    - created_at (timestamp)
+    - updated_at (timestamp)
 
-- **UI Components**: Shadcn UI
+- **Agents Table**
+  - Primary key: agent_id
+  - Fields:
+    - name (string)
+    - description (text)
+    - model_id (foreign key to llm_models)
+    - configuration (jsonb)
+    - max_tokens (integer, optional)
+    - temperature (float, optional)
+    - is_premium (boolean, default false)
+    - chat_id (foreign key to chats, optional - for future implementation)
+    - created_by (foreign key to auth.users)
+    - created_at (timestamp)
+    - updated_at (timestamp)
+    - status (enum: 'draft', 'active', 'inactive')
+    - version (integer)
 
-  - Built on Radix UI primitives
-  - Accessible and customizable components
-  - Consistent design system foundation
+### 2. Frontend Components
 
-- **Styling**: Tailwind CSS
+- **Dashboard Layout**
 
-  - Utility-first CSS framework
-  - Rapid prototyping capabilities
-  - Consistent design tokens
+  - Navigation sidebar
+  - Agent management section
+  - User profile section
 
-- **Package Management**: pnpm workspaces
+- **Agent Creation Flow**
+  - Agent list view
+  - Create new agent form
+  - Agent detail view
+  - Agent configuration interface
 
-  - Efficient dependency management
-  - Monorepo structure support
-  - Faster installation and better disk space usage
+### 3. API Endpoints
 
-- **State Management**: React Context + Hooks
+- GET /api/agents - List all agents
+- POST /api/agents - Create new agent
+- GET /api/agents/:id - Get agent details
+- PUT /api/agents/:id - Update agent
+- DELETE /api/agents/:id - Delete agent
 
-  - Centralized state management
-  - Custom hooks for reusable logic
-  - Context-based state isolation
+## Development Phases
 
-- **Form Management**: React Hook Form with Zod
+### Phase 1: Foundation
 
-  - Performance-focused form handling
-  - Type-safe form validation
-  - Reduced bundle size
+1. Database setup and migrations
+2. Basic agent list view
+3. Create agent form UI
 
-- **Animation**: Framer Motion
-  - Declarative animations
-  - Gesture support
-  - Performance optimized
+### Phase 2: Core Functionality
 
-## Technical Constraints
+1. Agent creation implementation
+2. Agent detail view
+3. Basic agent configuration
 
-### Performance Targets
+### Phase 3: Enhanced Features
 
-- First Contentful Paint (FCP) < 1.5s
-- Time to Interactive (TTI) < 3.5s
-- Lighthouse score > 90 in all categories
+1. Agent versioning
+2. Advanced configuration options
+3. Agent status management
 
-### Browser Support
+### Phase 4: Polish
 
-- Modern evergreen browsers
-- Last 2 versions of major browsers
-- No IE11 support
+1. Error handling
+2. Loading states
+3. Success notifications
+4. Form validation
 
-### Accessibility
+## Technical Stack
 
-- WCAG 2.1 Level AA compliance
-- Keyboard navigation support
-- Screen reader compatibility
+- Frontend: Next.js, React, TypeScript
+- Database: Supabase
+- Authentication: Supabase Auth
+- UI Components: Shadcn/ui
+- State Management: React Context/State
+- Form Handling: React Hook Form
+- Validation: Zod
 
-### Security
+## Security Considerations
 
-- Regular dependency updates
-- Security best practices implementation
-- OWASP Top 10 compliance
-- Authentication best practices
-  - Secure password handling
-  - Rate limiting for auth endpoints
-  - Session management
-  - JWT token handling
-  - OAuth2 implementation readiness
-
-## Development Guidelines
-
-### Code Quality
-
-- ESLint for code linting
-- Prettier for code formatting
-- Husky for pre-commit hooks
-- Jest and React Testing Library for testing
-
-### CI/CD Considerations
-
-- Automated testing
-- Build optimization
-- Deployment automation
-- Environment management
-
-### Documentation
-
-- Component documentation
-- API documentation
-- Style guide
-- Contributing guidelines
-
-## Authentication Architecture
-
-### Route Structure
-
-- Isolated authentication routes
-- Protected route handling
-- Public route accessibility
-
-### Authentication Flow
-
-- Email/Password authentication
-- Social authentication readiness
-- Password reset workflow
-- Email verification process
-- Session management strategy
-
-### Security Considerations
-
-- CSRF protection
-- XSS prevention
-- Rate limiting
-- Password policies
-- Session timeout handling
-
-## Future Considerations
-
-- Internationalization support
-- PWA capabilities
-- Analytics integration
-- Error tracking
-- Performance monitoring
+- Row Level Security (RLS) for agent data
+- User authentication for all operations
+- Input validation and sanitization
+- API rate limiting
+- Error handling without exposing sensitive information

@@ -14,4 +14,6 @@ export const protectedRoutes = [
     '/settings',           // User settings
     '/profile',            // User profile
     '/manage-plan',        // Manage plan
+    '/create-agent', // Create agent
+    '/test', // Testing page
 ]
