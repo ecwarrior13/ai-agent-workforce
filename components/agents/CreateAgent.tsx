@@ -22,19 +22,39 @@ import {
 } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { useRouter } from "next/navigation";
+import { type LLMModel } from "@/actions/getModels";
+import { Switch } from "../ui/switch";
+import { toast } from "sonner";
+import { addAgent } from "@/actions/addAgents";
 
-import { aiModelList } from "@/config/aiModels";
+interface CreateAgentProps {
+  models: LLMModel[];
+}
 
-function CreateAgent() {
+function CreateAgent({ models }: CreateAgentProps) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [temperature, setTemperature] = useState(0.7);
+  const [temperature, setTemperature] = useState(0.3);
   const [selectedModel, setSelectedModel] = useState(
-    "jn7avtfkf0p8c1y997b5dw1p5x7d2ktj"
+    models.length > 0 ? models[0].id : ""
   );
 
   async function handleSubmit(formData: FormData) {
     setIsSubmitting(true);
+    try {
+      const result = await addAgent(formData);
+      if (result.error) {
+        toast.error(result.error);
+      } else {
+        toast.success("Agent created successfully");
+        router.push("/dashboard");
+      }
+    } catch (error) {
+      console.error("Form submission error:", error);
+      toast.error("An unexpected error occurred");
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
@@ -74,30 +94,39 @@ function CreateAgent() {
 
             <div className="space-y-2">
               <Label htmlFor="modelId">AI Model</Label>
-              <Select
-                name="modelId"
-                defaultValue={selectedModel}
-                onValueChange={setSelectedModel}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a model" />
-                </SelectTrigger>
-                <SelectContent>
-                  {aiModelList?.map((model) => (
-                    <SelectItem
-                      key={model.apiModelName}
-                      value={model.apiModelName}
-                    >
-                      {model.name}
-                      {model.premium && (
-                        <span className="ml-2 text-xs text-amber-500">
-                          Premium
-                        </span>
-                      )}
-                    </SelectItem>
-                  )) || []}
-                </SelectContent>
-              </Select>
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <Select
+                    name="modelId"
+                    defaultValue={selectedModel}
+                    onValueChange={setSelectedModel}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a model" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {models?.map((model) => (
+                        <SelectItem key={model.id} value={model.id}>
+                          {model.name}
+                          {model.premium && (
+                            <span className="ml-2 text-xs text-amber-500">
+                              Premium
+                            </span>
+                          )}
+                        </SelectItem>
+                      )) || []}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex items-center space-x-2 ml-4">
+                  <Switch
+                    id="is_public"
+                    name="is_public"
+                    className="data-[state=checked]:bg-primary data-[state=unchecked]:bg-gray-200"
+                  />
+                  <Label htmlFor="is_public">Make public</Label>
+                </div>
+              </div>
             </div>
             <div className="space-y-2">
               <Label htmlFor="systemPrompt">System Prompt</Label>
@@ -128,6 +157,7 @@ function CreateAgent() {
               </div>
               <Slider
                 id="temperature"
+                name="temperature"
                 min={0}
                 max={1}
                 step={0.1}

@@ -31,7 +31,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
           <Separator />
           {/* </div> */}
           {/* Header will go here */}
-          <div className="container mx-auto p-4">{children}</div>
+          <div className="container mx-auto p-3">{children}</div>
         </main>
       </SidebarProvider>
     </div>

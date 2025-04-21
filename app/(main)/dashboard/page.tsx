@@ -1,10 +1,14 @@
+import { getAgents } from "@/actions/getAgents";
+
 import { Button } from "@/components/ui/button";
+import { AgentWithModel } from "@/types/agent";
 
 import { createClient } from "@/utils/supabase/server";
 import { PlusIcon } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import React from "react";
+import AgentsDisplay from "./_components/AgentsDisplay";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -14,6 +18,22 @@ export default async function DashboardPage() {
 
   if (!user) {
     redirect("/sign-in");
+  }
+  const { data: agents, error, success } = await getAgents();
+
+  const typedAgents = agents as AgentWithModel[];
+  // Handle error state
+  if (!success) {
+    return (
+      <div className="max-w-7xl mx-auto px-6 md:px-8">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-red-600 mb-4">
+            Error Loading Agents
+          </h1>
+          <p className="text-red-500">{error || "Failed to load agents"}</p>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -26,20 +46,42 @@ export default async function DashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Leftside */}
         <div className="flex flex-col gap-6 p-4 border border-gray-200 rounded-xl bg-white">
-          <div className="text-center py-12">
-            <h2 className="text-xl font-medium mb-2">
-              You do not have any agents yet
-            </h2>
-            <p className="text-muted-foreground mb-6">
-              Create your first AI agent.
-            </p>
-            <Link href="/dashboard/create-agent">
-              <Button>
-                <PlusIcon className="mr-2 h-4 w-4" />
-                Create Your First Agent
-              </Button>
-            </Link>
-          </div>
+          {typedAgents && typedAgents.length === 0 ? (
+            <div className="text-center py-12">
+              <h2 className="text-xl font-medium mb-2">
+                You do not have any agents yet
+              </h2>
+              <p className="text-muted-foreground mb-6">
+                Create your first AI agent.
+              </p>
+              <Link href="/dashboard/create-agent">
+                <Button>
+                  <PlusIcon className="mr-2 h-4 w-4" />
+                  Create Your First Agent
+                </Button>
+              </Link>
+            </div>
+          ) : (
+            // Agents Exist View
+            <div className="space-y-4">
+              {/* Create New Agent Button - Always at top */}
+              <div className="flex justify-end">
+                <Link href="/dashboard/create-agent">
+                  <Button>
+                    <PlusIcon className="mr-2 h-4 w-4" />
+                    Create New Agent
+                  </Button>
+                </Link>
+              </div>
+              {/* Agents Grid - 2 columns on desktop, 1 on mobile */}
+              {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-4"> */}
+              {/* {typedAgents?.map((agent) => (
+                  <AgentCard key={agent.id} agent={agent} />
+                ))} */}
+              <AgentsDisplay initialAgents={typedAgents} />
+              {/* </div> */}
+            </div>
+          )}
         </div>
 
         <div className="lg:order-2 flex flex-col gap-4 p-4 border border-gray-200 rounded-xl bg-white">

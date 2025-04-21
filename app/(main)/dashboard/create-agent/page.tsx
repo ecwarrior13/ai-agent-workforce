@@ -1,12 +1,5 @@
-import CreateAgent from "@/components/agents/CreateAgent";
-import React from "react";
+import CreateAgentPage from "@/components/agents/CreateAgentPage";
 
-function CreateAgentPage() {
-  return (
-    <div>
-      <CreateAgent />
-    </div>
-  );
+export default function Page() {
+  return <CreateAgentPage />;
 }
-
-export default CreateAgentPage;
