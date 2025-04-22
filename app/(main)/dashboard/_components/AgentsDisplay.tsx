@@ -6,6 +6,7 @@ import { ChevronDown } from "lucide-react";
 import React, { useState } from "react";
 import EditAgentDialog from "./EditAgentDialog";
 import CustomCard from "@/components/agents/custom-agent";
+import DeleteAgentDialog from "./DeleteAgentdialog";
 
 interface AgentsDisplayProps {
   initialAgents: AgentWithModel[];
@@ -17,6 +18,10 @@ function AgentsDisplay({ initialAgents }: AgentsDisplayProps) {
   const [hasMore, setHasMore] = useState(agents.length > 4);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [agentToEdit, setAgentToEdit] = useState<AgentWithModel | null>(null);
+  const [agentToDelete, setAgentToDelete] = useState<AgentWithModel | null>(
+    null
+  );
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   const loadMore = () => {
     const currentLength = visibleAgents.length;
@@ -28,6 +33,10 @@ function AgentsDisplay({ initialAgents }: AgentsDisplayProps) {
   const handleEdit = (agent: AgentWithModel) => {
     setAgentToEdit(agent);
     setIsEditDialogOpen(true);
+  };
+  const handleDelete = (agent: AgentWithModel) => {
+    setAgentToDelete(agent);
+    setIsDeleteDialogOpen(true);
   };
 
   return (
@@ -43,6 +52,7 @@ function AgentsDisplay({ initialAgents }: AgentsDisplayProps) {
             key={agent.id}
             agent={agent}
             onEdit={() => handleEdit(agent)}
+            onDelete={() => handleDelete(agent)}
           />
         ))}
       </div>
@@ -62,6 +72,13 @@ function AgentsDisplay({ initialAgents }: AgentsDisplayProps) {
           open={isEditDialogOpen}
           setOpen={setIsEditDialogOpen}
           agent={agentToEdit}
+        />
+      )}
+      {agentToDelete && (
+        <DeleteAgentDialog
+          open={isDeleteDialogOpen}
+          setOpen={setIsDeleteDialogOpen}
+          agent={agentToDelete}
         />
       )}
     </div>

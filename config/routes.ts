@@ -16,4 +16,5 @@ export const protectedRoutes = [
     '/manage-plan',        // Manage plan
     '/create-agent', // Create agent
     '/test', // Testing page
+    '/agent',       //Agent Chat Page
 ]
