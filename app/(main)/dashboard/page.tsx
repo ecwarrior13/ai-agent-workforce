@@ -9,6 +9,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import React from "react";
 import AgentsDisplay from "./_components/AgentsDisplay";
+import TasksPage from "@/components/tasks/TaskPage";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -25,9 +26,9 @@ export default async function DashboardPage() {
   // Handle error state
   if (!success) {
     return (
-      <div className="max-w-7xl mx-auto px-6 md:px-8">
+      <div className="mx-auto max-w-7xl px-6 md:px-8">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-red-600 mb-4">
+          <h1 className="mb-4 text-2xl font-bold text-red-600">
             Error Loading Agents
           </h1>
           <p className="text-red-500">{error || "Failed to load agents"}</p>
@@ -37,18 +38,18 @@ export default async function DashboardPage() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-6 md:px-8">
+    <div className="mx-auto max-w-7xl px-6 md:px-8">
       <div className="text-center">
-        <h1 className="text-2xl font-bold mb-4">
+        <h1 className="mb-4 text-2xl font-bold">
           Welcome, {user.user_metadata?.full_name || "User"}!
         </h1>
       </div>
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         {/* Leftside */}
-        <div className="flex flex-col gap-6 p-4 border border-gray-200 rounded-xl bg-white">
+        <div className="flex flex-col gap-6 rounded-xl border border-gray-200 bg-white p-4">
           {typedAgents && typedAgents.length === 0 ? (
-            <div className="text-center py-12">
-              <h2 className="text-xl font-medium mb-2">
+            <div className="py-12 text-center">
+              <h2 className="mb-2 text-xl font-medium">
                 You do not have any agents yet
               </h2>
               <p className="text-muted-foreground mb-6">
@@ -64,8 +65,9 @@ export default async function DashboardPage() {
           ) : (
             // Agents Exist View
             <div className="space-y-4">
-              {/* Create New Agent Button - Always at top */}
-              <div className="flex justify-end">
+              {/* Header and button in the same line with space between */}
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-medium">Your Agents</h2>
                 <Link href="/dashboard/create-agent">
                   <Button>
                     <PlusIcon className="mr-2 h-4 w-4" />
@@ -73,19 +75,15 @@ export default async function DashboardPage() {
                   </Button>
                 </Link>
               </div>
-              {/* Agents Grid - 2 columns on desktop, 1 on mobile */}
-              {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-4"> */}
-              {/* {typedAgents?.map((agent) => (
-                  <AgentCard key={agent.id} agent={agent} />
-                ))} */}
+
               <AgentsDisplay initialAgents={typedAgents} />
-              {/* </div> */}
             </div>
           )}
         </div>
 
-        <div className="lg:order-2 flex flex-col gap-4 p-4 border border-gray-200 rounded-xl bg-white">
+        <div className="flex flex-col gap-4 rounded-xl border border-gray-200 bg-white p-4 lg:order-2">
           Right Side
+          <TasksPage />
         </div>
       </div>
     </div>

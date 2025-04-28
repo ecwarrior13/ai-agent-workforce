@@ -26,6 +26,7 @@ import { type LLMModel } from "@/actions/getModels";
 import { Switch } from "../ui/switch";
 import { toast } from "sonner";
 import { addAgent } from "@/actions/addAgents";
+import { RequiredInputs } from "./required-inputs";
 
 interface CreateAgentProps {
   models: LLMModel[];
@@ -35,8 +36,9 @@ function CreateAgent({ models }: CreateAgentProps) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [temperature, setTemperature] = useState(0.3);
+  const [isPremium, setIsPremium] = useState(false);
   const [selectedModel, setSelectedModel] = useState(
-    models.length > 0 ? models[0].id : ""
+    models.length > 0 ? models[0].id : "",
   );
 
   async function handleSubmit(formData: FormData) {
@@ -58,8 +60,8 @@ function CreateAgent({ models }: CreateAgentProps) {
   }
 
   return (
-    <div className="container mx-auto py-8 max-w-2xl">
-      <h1 className="text-3xl font-bold mb-8">Create New AI Agent</h1>
+    <div className="container mx-auto max-w-2xl py-8">
+      <h1 className="mb-8 text-3xl font-bold">Create New AI Agent</h1>
 
       <form action={handleSubmit}>
         <Card>
@@ -118,7 +120,7 @@ function CreateAgent({ models }: CreateAgentProps) {
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="flex items-center space-x-2 ml-4">
+                <div className="ml-4 flex items-center space-x-2">
                   <Switch
                     id="is_public"
                     name="is_public"
@@ -129,6 +131,41 @@ function CreateAgent({ models }: CreateAgentProps) {
               </div>
             </div>
             <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    id="is_premium"
+                    name="is_premium"
+                    checked={isPremium}
+                    onCheckedChange={setIsPremium}
+                    className="data-[state=checked]:bg-primary data-[state=unchecked]:bg-gray-200"
+                  />
+                  <Label htmlFor="is_premium" className="text-lg font-semibold">
+                    Enhanced Premium Agent
+                  </Label>
+                </div>
+                {isPremium && (
+                  <span className="text-xs text-amber-500">
+                    Premium features enabled
+                  </span>
+                )}
+              </div>
+              <p className="text-muted-foreground text-sm">
+                Enable premium features including custom tools, required inputs,
+                and enhanced system prompts.
+              </p>
+            </div>
+            {isPremium && (
+              <div className="space-y-2">
+                <Label className="text-lg font-semibold">Required Inputs</Label>
+                <p className="text-muted-foreground text-sm">
+                  Define the inputs that users must provide when interacting
+                  with this agent.
+                </p>
+                <RequiredInputs onInputsChange={() => {}} />
+              </div>
+            )}
+            <div className="space-y-2">
               <Label htmlFor="systemPrompt">System Prompt</Label>
               <Textarea
                 className="bg-white"
@@ -138,7 +175,7 @@ function CreateAgent({ models }: CreateAgentProps) {
                 rows={5}
                 required
               />
-              <p className="text-xs text-muted-foreground">
+              <p className="text-muted-foreground text-xs">
                 This is the instruction set that defines your agent&apos;s
                 personality and capabilities.
               </p>
@@ -147,7 +184,7 @@ function CreateAgent({ models }: CreateAgentProps) {
             <div className="space-y-2">
               <div className="flex justify-between">
                 <Label htmlFor="temperature">Temperature: {temperature}</Label>
-                <span className="text-xs text-muted-foreground">
+                <span className="text-muted-foreground text-xs">
                   {temperature < 0.3
                     ? "More focused"
                     : temperature > 0.7
@@ -175,7 +212,7 @@ function CreateAgent({ models }: CreateAgentProps) {
                 type="number"
                 placeholder="e.g., 2048"
               />
-              <p className="text-xs text-muted-foreground">
+              <p className="text-muted-foreground text-xs">
                 Maximum number of tokens in the response. Leave empty for model
                 default.
               </p>

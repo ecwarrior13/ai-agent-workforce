@@ -1,5 +1,5 @@
 "use client";
-//import AgentCard from "@/components/agents/agent-card";
+
 import { Button } from "@/components/ui/button";
 import { AgentWithModel } from "@/types/agent";
 import { ChevronDown } from "lucide-react";
@@ -7,12 +7,14 @@ import React, { useState } from "react";
 import EditAgentDialog from "./EditAgentDialog";
 import CustomCard from "@/components/agents/custom-agent";
 import DeleteAgentDialog from "./DeleteAgentdialog";
+import { useRouter } from "next/navigation";
 
 interface AgentsDisplayProps {
   initialAgents: AgentWithModel[];
 }
 
 function AgentsDisplay({ initialAgents }: AgentsDisplayProps) {
+  const router = useRouter();
   const [agents] = useState(initialAgents);
   const [visibleAgents, setVisibleAgents] = useState(agents.slice(0, 4));
   const [hasMore, setHasMore] = useState(agents.length > 4);
@@ -34,25 +36,26 @@ function AgentsDisplay({ initialAgents }: AgentsDisplayProps) {
     setAgentToEdit(agent);
     setIsEditDialogOpen(true);
   };
+
   const handleDelete = (agent: AgentWithModel) => {
     setAgentToDelete(agent);
     setIsDeleteDialogOpen(true);
+  };
+
+  const onLaunch = (agent: AgentWithModel) => {
+    router.push(`/agent/${agent.id}`);
   };
 
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {visibleAgents.map((agent) => (
-          //   <AgentCard
-          //     key={agent.id}
-          //     agent={agent}
-          //     onEdit={() => handleEdit(agent)}
-          //   />
           <CustomCard
             key={agent.id}
             agent={agent}
             onEdit={() => handleEdit(agent)}
             onDelete={() => handleDelete(agent)}
+            onLaunch={() => onLaunch(agent)}
           />
         ))}
       </div>

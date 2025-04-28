@@ -19,7 +19,7 @@ export default function MainAgentLayout({ children }: MainLayoutProps) {
   return (
     <div className="flex min-h-screen">
       {/* Sidebar will go here */}
-      <SidebarProvider>
+      <SidebarProvider defaultOpen={false}>
         <DashboardSidebar isCollapsed={false} />
         <main className="flex-1">
           {/* <div className="flex flex-col flex-1 min-h-screen"> */}

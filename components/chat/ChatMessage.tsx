@@ -1,8 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { BotIcon, UserIcon } from "lucide-react";
+
 import ReactMarkdown from "react-markdown";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
@@ -14,12 +13,7 @@ interface ChatMessageProps {
   isLoading?: boolean;
 }
 
-export function ChatMessage({
-  role,
-  content,
-  className,
-  isLoading,
-}: ChatMessageProps) {
+export function ChatMessage({ role, content, className }: ChatMessageProps) {
   const isUser = role === "user";
 
   return (
@@ -30,13 +24,6 @@ export function ChatMessage({
         className
       )}
     >
-      {/* Show AI Avatar on the left for assistant messages */}
-      {/* {!isUser && (
-        <Avatar className="h-8 w-8 mt-1">
-          <BotIcon className="h-4 w-4" />
-        </Avatar>
-      )} */}
-
       {/* Message Content */}
       <div
         className={cn(
@@ -109,14 +96,6 @@ export function ChatMessage({
           </ReactMarkdown>
         </div>
       </div>
-
-      {/* Show User Avatar on the right for user messages */}
-
-      {/* {isUser && (
-        <Avatar className="h-8 w-8 mt-1">
-          <UserIcon className="h-4 w-4" />
-        </Avatar>
-      )} */}
     </div>
   );
 }

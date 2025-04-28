@@ -36,7 +36,6 @@ export default function EditAgentForm({
   agentEdit,
   onClose,
 }: EditAgentFormProps) {
-  console.log("@agentEdit.temperature", agentEdit.temperature);
   const [temperature, setTemperature] = useState(agentEdit.temperature);
   const [selectedModel, setSelectedModel] = useState(agentEdit.model_id);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -51,8 +50,6 @@ export default function EditAgentForm({
     };
     fetchModels();
   }, []);
-
-  console.log("@temperature", temperature);
 
   const handleSubmit = async (formData: FormData) => {
     try {
@@ -110,8 +107,8 @@ export default function EditAgentForm({
   };
 
   return (
-    <div className="container mx-auto py-4 max-w-2xl max-h-[90vh] overflow-y-auto">
-      <h1 className="text-2xl font-bold mb-4">Edit AI Agent</h1>
+    <div className="container mx-auto max-h-[90vh] max-w-2xl overflow-y-auto py-4">
+      <h1 className="mb-4 text-2xl font-bold">Edit AI Agent</h1>
       <form action={handleSubmit}>
         <Card>
           <CardHeader>
@@ -168,7 +165,7 @@ export default function EditAgentForm({
                 </SelectContent>
               </Select>
             </div>
-            <div className="flex items-center space-x-2 ml-4">
+            <div className="ml-4 flex items-center space-x-2">
               <Switch
                 id="is_public"
                 name="is_public"
@@ -188,7 +185,7 @@ export default function EditAgentForm({
                 defaultValue={agentEdit.configuration?.systemPrompt || ""}
                 required
               />
-              <p className="text-xs text-muted-foreground">
+              <p className="text-muted-foreground text-xs">
                 This is the instruction set that defines your agent&apos;s
                 personality and capabilities.
               </p>
@@ -197,7 +194,7 @@ export default function EditAgentForm({
             <div className="space-y-2">
               <div className="flex justify-between">
                 <Label htmlFor="temperature">Temperature: {temperature}</Label>
-                <span className="text-xs text-muted-foreground">
+                <span className="text-muted-foreground text-xs">
                   {temperature < 0.3
                     ? "More focused"
                     : temperature > 0.7
@@ -228,7 +225,7 @@ export default function EditAgentForm({
                 placeholder="e.g., 2048"
                 defaultValue={agentEdit.max_tokens}
               />
-              <p className="text-xs text-muted-foreground">
+              <p className="text-muted-foreground text-xs">
                 Maximum number of tokens in the response. Leave empty for model
                 default.
               </p>

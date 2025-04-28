@@ -1,5 +1,8 @@
 "use client";
 
+//This is enhanced version of a system prompt
+// that allows you to create a custom system prompt for an AI agent.
+
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
