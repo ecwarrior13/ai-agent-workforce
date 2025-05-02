@@ -35,6 +35,20 @@ export async function getAgents(): Promise<GetAgentsResult> {
             notes,
             disabled,
             premium
+          ),
+          required_inputs (
+            id,
+            name,
+            label,
+            description,
+            type,
+            is_required,
+            is_premium,
+            validation_rules,
+            options,
+            placeholder,
+            default_value,
+            order_index
           )
         `)
         .eq('created_by', user.id)
@@ -86,7 +100,21 @@ export async function getAgentById(id: string): Promise<GetAgentsResult & { data
                 notes,
                 disabled,
                 premium
-        )
+            ),
+            required_inputs (
+                id,
+                name,
+                label,
+                description,
+                type,
+                is_required,
+                is_premium,
+                validation_rules,
+                options,
+                placeholder,
+                default_value,
+                order_index
+            )
         `)
         .eq('id', id)
         // Allow access if:

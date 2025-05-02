@@ -23,9 +23,37 @@ export type Agent = AgentFormData & {
     updated_at: string;
 };
 
+// Required Input type
+export type RequiredInput = {
+    id: string;
+    name: string;
+    label: string;
+    description: string | null;
+    type: 'text' | 'number' | 'url' | 'email' | 'date' | 'select' | 'multiselect' | 'file' | 'textarea';
+    is_required: boolean;
+    is_premium: boolean;
+    validation_rules: {
+        required?: boolean;
+        min?: number;
+        max?: number;
+        pattern?: string;
+        minLength?: number;
+        maxLength?: number;
+        [key: string]: unknown;
+    };
+    options: Array<{
+        label: string;
+        value: string | number;
+    }>;
+    placeholder: string | null;
+    default_value: string | null;
+    order_index: number;
+};
+
 // Agent with model data
 export type AgentWithModel = Agent & {
     model: LLMModel;  // Include the full model data
+    required_inputs: RequiredInput[];  // Include required inputs
 };
 
 // Agent with computed/derived properties for display

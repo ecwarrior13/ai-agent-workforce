@@ -9,11 +9,6 @@ const openRouter = createOpenRouter({
     apiKey: process.env.OPENROUTER_API_KEY,
 });
 
-
-
-
-
-
 export async function POST(req: Request) {
     const { messages, modelId, systemPrompt, provider } = await req.json();
 

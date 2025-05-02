@@ -3,7 +3,7 @@
 import { createClient } from "@/utils/supabase/server";
 import { revalidatePath } from "next/cache";
 
-import { agentSchema, type AgentFormData } from "@/schemas/agentSchema";
+import { agentSchema, type AgentFormData, type RequiredInput, type InputType } from "@/schemas/agentSchema";
 import { z } from "zod";
 
 // Define the response type
@@ -50,7 +50,8 @@ export async function addAgent(formData: FormData): Promise<ActionResult> {
         const validatedData = agentSchema.parse(rawData);
 
         console.log("Validated data:", validatedData);
-        // Insert into database
+
+        // Create the agent first
         const { data: agent, error: insertError } = await supabase
             .from("agents")
             .insert({
@@ -66,6 +67,57 @@ export async function addAgent(formData: FormData): Promise<ActionResult> {
                 success: false,
                 error: "Failed to create agent. Please try again.",
             };
+        }
+
+        // Parse required inputs from form data
+        const requiredInputs: RequiredInput[] = [];
+        let inputIndex = 0;
+        while (true) {
+            const inputName = formData.get(`required_inputs[${inputIndex}][name]`);
+            if (!inputName) break;
+
+            const input: RequiredInput = {
+                name: inputName as string,
+                label: formData.get(`required_inputs[${inputIndex}][label]`) as string,
+                description: formData.get(`required_inputs[${inputIndex}][description]`) as string || undefined,
+                type: formData.get(`required_inputs[${inputIndex}][type]`) as InputType,
+                is_required: formData.get(`required_inputs[${inputIndex}][is_required]`) === "true",
+                is_premium: formData.get(`required_inputs[${inputIndex}][is_premium]`) === "true",
+                validation_rules: JSON.parse(formData.get(`required_inputs[${inputIndex}][validation_rules]`) as string || "{}"),
+                placeholder: formData.get(`required_inputs[${inputIndex}][placeholder]`) as string || undefined,
+                default_value: formData.get(`required_inputs[${inputIndex}][default_value]`) as string || undefined,
+                order_index: inputIndex,
+                options: [] // Default empty array for options
+            };
+
+            requiredInputs.push(input);
+            inputIndex++;
+        }
+
+        // Insert required inputs if any exist
+        if (requiredInputs.length > 0) {
+            const { error: inputsError } = await supabase
+                .from("required_inputs")
+                .insert(
+                    requiredInputs.map(input => ({
+                        ...input,
+                        agent_id: agent.id
+                    }))
+                );
+
+            if (inputsError) {
+                console.error("Error inserting required inputs:", inputsError);
+                // Rollback agent creation
+                await supabase
+                    .from("agents")
+                    .delete()
+                    .eq("id", agent.id);
+
+                return {
+                    success: false,
+                    error: "Failed to create required inputs. Please try again.",
+                };
+            }
         }
 
         // Revalidate the agents page
