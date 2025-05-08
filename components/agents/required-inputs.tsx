@@ -33,6 +33,9 @@ import {
 import { Textarea } from "../ui/textarea";
 import { Card } from "../ui/card";
 
+// Add constant for maximum required inputs
+const MAX_REQUIRED_INPUTS = 4;
+
 // Define the input types
 export type InputType =
   | "text"
@@ -85,6 +88,11 @@ export function RequiredInputs({
   const [expandedInput, setExpandedInput] = useState<string | null>(null);
 
   const handleAddInput = () => {
+    if (inputs.length >= MAX_REQUIRED_INPUTS) {
+      toast.error(`Maximum of ${MAX_REQUIRED_INPUTS} inputs allowed`);
+      return;
+    }
+
     if (!newInput.name || !newInput.label) {
       toast.error("Name and label are required");
       return;
@@ -195,7 +203,8 @@ export function RequiredInputs({
         <div className="flex items-center gap-2">
           <h3 className="text-lg font-semibold">Form Fields</h3>
           <Badge variant="outline" className="text-xs">
-            {inputs.length} {inputs.length === 1 ? "field" : "fields"}
+            {inputs.length}/{MAX_REQUIRED_INPUTS}{" "}
+            {inputs.length === 1 ? "field" : "fields"}
           </Badge>
         </div>
       </div>
@@ -203,10 +212,18 @@ export function RequiredInputs({
       {/* New Input Form Accordion with no bottom border */}
       <Accordion type="single" collapsible className="rounded-lg border">
         <AccordionItem value="new" className="border-b-0">
-          <AccordionTrigger className="px-4 py-2 hover:no-underline">
+          <AccordionTrigger
+            className="px-4 py-2 hover:no-underline"
+            disabled={inputs.length >= MAX_REQUIRED_INPUTS}
+          >
             <div className="flex items-center gap-2">
               <Plus className="h-4 w-4" />
               <span>Add New Field</span>
+              {inputs.length >= MAX_REQUIRED_INPUTS && (
+                <span className="text-muted-foreground ml-2 text-xs">
+                  (Maximum limit reached)
+                </span>
+              )}
             </div>
           </AccordionTrigger>
           <AccordionContent className="px-4 pb-4">

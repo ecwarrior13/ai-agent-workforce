@@ -3,18 +3,10 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useChat } from "@ai-sdk/react";
 import { createClient } from "@/utils/supabase/client";
-import {
-  ImageIcon,
-  LetterText,
-  PenIcon,
-  PlusCircle,
-  Send,
-  Pencil,
-} from "lucide-react";
+import { PlusCircle, Send, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
-import { useCreateChatSession } from "@/hooks/use-create-chat-session";
 import {
   Dialog,
   DialogContent,
@@ -29,53 +21,110 @@ import { AgentWithModel } from "@/types/agent";
 
 interface AiAgentChatProps {
   agent: AgentWithModel;
+  chatSessionId: string;
+  hasSubmittedInputs: boolean;
 }
 
-interface ToolInvocation {
-  toolCallId: string;
-  toolName: string;
-  result?: Record<string, unknown>;
+type SubmittedInputValue = string | number | boolean | null;
+
+interface AgentInput {
+  input_data: SubmittedInputValue;
+  required_inputs: {
+    name: string;
+  };
 }
 
-interface ToolPart {
-  type: "tool-invocation";
-  toolInvocation: ToolInvocation;
-}
-
-const formatToolInvocation = (part: ToolPart) => {
-  if (!part.toolInvocation) return "Unknown Tool";
-  return `🔧 Tool Used: ${part.toolInvocation.toolName}`;
-};
-
-function AiAgentChat({ agent }: AiAgentChatProps) {
+function AiAgentChat({
+  agent,
+  chatSessionId,
+  hasSubmittedInputs,
+}: AiAgentChatProps) {
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [titleInput, setTitleInput] = useState("");
   const [showNewChatDialog, setShowNewChatDialog] = useState(false);
+  const [submittedInputs, setSubmittedInputs] = useState<
+    Record<string, SubmittedInputValue>
+  >({});
   const titleInputRef = useRef<HTMLInputElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const supabase = createClient();
-  const { user, loading } = useAuth();
+  const { user } = useAuth();
 
   // Development flag to control message saving
   const ENABLE_MESSAGE_SAVING = false;
 
-  const { chatSession, setChatSession } = useCreateChatSession({
-    agentId: agent.id,
-    agentName: agent.name,
-    userId: user?.id || null,
-    isLoading: loading,
-  });
-
   const [isStartingNewChat, setIsStartingNewChat] = useState(false);
 
+  // Fetch submitted inputs when component mounts
+  useEffect(() => {
+    const fetchSubmittedInputs = async () => {
+      console.log("Fetching submitted inputs...", {
+        hasSubmittedInputs,
+        chatSessionId,
+        agentId: agent.id,
+      });
+
+      if (!hasSubmittedInputs) {
+        console.log("Not fetching inputs because hasSubmittedInputs is false");
+        return;
+      }
+
+      try {
+        const { data: inputs, error } = await supabase
+          .from("agent_inputs")
+          .select(
+            `
+            input_data,
+            required_inputs (
+              name
+            )
+          `,
+          )
+          .eq("chat_session_id", chatSessionId);
+
+        if (error) {
+          console.error("Database error:", error);
+          throw error;
+        }
+
+        console.log("Raw inputs from database:", inputs);
+
+        if (!inputs || inputs.length === 0) {
+          console.log(
+            "No inputs found in database for chat session:",
+            chatSessionId,
+          );
+          return;
+        }
+
+        // Transform the data into a more usable format
+        const transformedInputs = (inputs as unknown as AgentInput[]).reduce(
+          (acc, input) => {
+            acc[input.required_inputs.name] = input.input_data;
+            return acc;
+          },
+          {} as Record<string, SubmittedInputValue>,
+        );
+
+        console.log("Transformed submitted inputs:", transformedInputs);
+        setSubmittedInputs(transformedInputs);
+      } catch (error) {
+        console.error("Error fetching submitted inputs:", error);
+        toast.error("Failed to load submitted inputs");
+      }
+    };
+
+    fetchSubmittedInputs();
+  }, [chatSessionId, hasSubmittedInputs, supabase, agent.id]);
+
   const saveMessage = async (content: string, role: "user" | "assistant") => {
-    if (!chatSession || !ENABLE_MESSAGE_SAVING) return;
+    if (!ENABLE_MESSAGE_SAVING) return;
 
     try {
       const { error } = await supabase.from("chat_messages").insert([
         {
-          session_id: chatSession.id,
+          session_id: chatSessionId,
           content,
           role,
           created_at: new Date().toISOString(),
@@ -101,6 +150,7 @@ function AiAgentChat({ agent }: AiAgentChatProps) {
       modelId: agent.model.api_model_name,
       systemPrompt: agent.configuration.systemPrompt,
       provider: agent.model.provider,
+      submittedInputs, // Include submitted inputs in the chat context
     },
     onFinish: (message) => {
       if (message.role === "assistant") {
@@ -113,6 +163,13 @@ function AiAgentChat({ agent }: AiAgentChatProps) {
     e.preventDefault();
     if (!input.trim()) return;
 
+    console.log("Sending message with context:", {
+      message: input,
+      submittedInputs,
+      systemPrompt: agent.configuration.systemPrompt,
+      model: agent.model.api_model_name,
+    });
+
     // Save user message
     await saveMessage(input, "user");
 
@@ -121,17 +178,17 @@ function AiAgentChat({ agent }: AiAgentChatProps) {
   };
 
   const updateTitle = async (newTitle: string) => {
-    if (!chatSession || !user) return;
+    if (!user) return;
 
     try {
       const { error } = await supabase
         .from("chat_sessions")
         .update({ title: newTitle })
-        .eq("id", chatSession.id);
+        .eq("id", chatSessionId);
 
       if (error) throw error;
 
-      setChatSession((prev) => (prev ? { ...prev, title: newTitle } : null));
+      setTitleInput(newTitle);
       setIsEditingTitle(false);
     } catch (error) {
       console.error("Error updating title:", error);
@@ -147,9 +204,6 @@ function AiAgentChat({ agent }: AiAgentChatProps) {
 
     setIsStartingNewChat(true);
     try {
-      // Reset chat session to trigger new session creation
-      setChatSession(null);
-
       // Clear messages using setMessages
       setMessages([]);
 
@@ -187,45 +241,57 @@ function AiAgentChat({ agent }: AiAgentChatProps) {
     }
   }, [status]);
 
+  if (!hasSubmittedInputs) {
+    return (
+      <div className="flex h-full items-center justify-center">
+        <div className="text-center">
+          <h3 className="text-lg font-medium text-gray-700">
+            Complete Required Inputs
+          </h3>
+          <p className="text-sm text-gray-500">
+            Please fill out the required inputs on the left to start chatting
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="flex h-full flex-col" key={chatSession?.id}>
+    <div className="flex h-full flex-col">
       <div className="hidden border-b border-gray-100 px-4 pb-3 lg:block">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold text-gray-800">{agent.name}</h2>
           <div className="flex items-center gap-2">
-            {chatSession && (
-              <div className="flex items-center gap-2">
-                {isEditingTitle ? (
-                  <input
-                    ref={titleInputRef}
-                    type="text"
-                    value={titleInput}
-                    onChange={(e) => setTitleInput(e.target.value)}
-                    onBlur={() => updateTitle(titleInput)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        updateTitle(titleInput);
-                      } else if (e.key === "Escape") {
-                        setIsEditingTitle(false);
-                        setTitleInput(chatSession.title);
-                      }
-                    }}
-                    className="rounded border border-gray-200 px-2 py-1 text-sm focus:border-purple-500 focus:outline-none"
-                  />
-                ) : (
-                  <div
-                    className="flex cursor-pointer items-center gap-1 rounded border border-gray-200 px-2 py-1 text-sm hover:bg-gray-50"
-                    onClick={() => {
-                      setTitleInput(chatSession.title);
-                      setIsEditingTitle(true);
-                    }}
-                  >
-                    <span>{chatSession.title}</span>
-                    <Pencil className="h-3 w-3 text-gray-500" />
-                  </div>
-                )}
-              </div>
-            )}
+            <div className="flex items-center gap-2">
+              {isEditingTitle ? (
+                <input
+                  ref={titleInputRef}
+                  type="text"
+                  value={titleInput}
+                  onChange={(e) => setTitleInput(e.target.value)}
+                  onBlur={() => updateTitle(titleInput)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      updateTitle(titleInput);
+                    } else if (e.key === "Escape") {
+                      setIsEditingTitle(false);
+                    }
+                  }}
+                  className="rounded border border-gray-200 px-2 py-1 text-sm focus:border-purple-500 focus:outline-none"
+                />
+              ) : (
+                <div
+                  className="flex cursor-pointer items-center gap-1 rounded border border-gray-200 px-2 py-1 text-sm hover:bg-gray-50"
+                  onClick={() => {
+                    setTitleInput(agent.name);
+                    setIsEditingTitle(true);
+                  }}
+                >
+                  <span>{agent.name}</span>
+                  <Pencil className="h-3 w-3 text-gray-500" />
+                </div>
+              )}
+            </div>
             <Button
               variant="outline"
               size="sm"
@@ -300,8 +366,9 @@ function AiAgentChat({ agent }: AiAgentChatProps) {
           <div ref={bottomRef} />
         </div>
       </div>
+
       {/* Input form */}
-      <div className="border-t border-gray-100 bg-white p-4">
+      <div className="border-t border-gray-100 p-4">
         <div className="space-y-3">
           <form onSubmit={handleMessageSubmit} className="flex gap-2">
             <input
@@ -325,29 +392,6 @@ function AiAgentChat({ agent }: AiAgentChatProps) {
               )}
             </Button>
           </form>
-          <div className="flex gap-2">
-            <button
-              className="flex w-full items-center justify-center gap-2 rounded-full bg-gray-100 px-4 py-2 text-xs transition-colors hover:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-50 xl:text-sm"
-              type="button"
-            >
-              <LetterText className="h-4 w-4" />
-            </button>
-            <button
-              className="flex w-full items-center justify-center gap-2 rounded-full bg-gray-100 px-4 py-2 text-xs transition-colors hover:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-50 xl:text-sm"
-              type="button"
-            >
-              <PenIcon className="h-4 w-4" />
-              Generate Title
-            </button>
-
-            <button
-              className="flex w-full items-center justify-center gap-2 rounded-full bg-gray-100 px-4 py-2 text-xs transition-colors hover:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-50 xl:text-sm"
-              type="button"
-            >
-              <ImageIcon className="h-4 w-4" />
-              Generate Image
-            </button>
-          </div>
         </div>
       </div>
     </div>

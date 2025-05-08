@@ -4,7 +4,8 @@ CREATE TABLE agent_inputs (
     agent_id UUID NOT NULL REFERENCES agents(id) ON DELETE CASCADE,
     required_input_id UUID NOT NULL REFERENCES required_inputs(id) ON DELETE CASCADE,
     user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-    value JSONB NOT NULL, -- Store different types of values (text, number, array, etc.)
+    chat_session_id UUID NOT NULL REFERENCES chat_sessions(id) ON DELETE CASCADE,
+    input_data JSONB NOT NULL, -- Store different types of values (text, number, array, etc.)
     is_valid BOOLEAN DEFAULT true,
     validation_errors JSONB DEFAULT '[]',
     last_validated_at TIMESTAMP WITH TIME ZONE,
@@ -47,3 +48,14 @@ CREATE TRIGGER set_agent_inputs_updated_at
     BEFORE UPDATE ON agent_inputs
     FOR EACH ROW
     EXECUTE FUNCTION set_updated_at(); 
+
+
+       -- Index for querying by chat_session_id
+   CREATE INDEX idx_agent_inputs_chat_session_id ON agent_inputs(chat_session_id);
+   
+   -- Index for the JSONB data if you'll query it frequently
+   CREATE INDEX idx_agent_inputs_input_data ON agent_inputs USING GIN (input_data);
+      -- Add if you want to implement soft delete
+   ALTER TABLE agent_inputs ADD COLUMN deleted_at TIMESTAMP WITH TIME ZONE;
+      -- Add if you want to track the status of inputs
+   ALTER TABLE agent_inputs ADD COLUMN status VARCHAR(20) DEFAULT 'pending';

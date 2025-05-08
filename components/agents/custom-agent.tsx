@@ -38,7 +38,7 @@ export default function CustomCard({
   const formattedDate = new Date(agent.created_at).toLocaleDateString();
 
   return (
-    <Card className="w-full h-full flex flex-col">
+    <Card className="flex h-full w-full flex-col">
       <CardHeader className="pb-2">
         <div className="flex flex-col items-center gap-4">
           <div className="relative h-12 w-12 flex-shrink-0">
@@ -49,7 +49,7 @@ export default function CustomCard({
               className="object-contain"
             />
           </div>
-          <div className="flex items-center justify-between w-full">
+          <div className="flex w-full items-center justify-between">
             <h3 className="font-semibold">{agent.name}</h3>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -79,8 +79,8 @@ export default function CustomCard({
         <div className="h-[4.5rem]">
           <div
             className={cn(
-              "text-sm text-muted-foreground h-full overflow-hidden",
-              isHovering && "overflow-y-auto"
+              "text-muted-foreground h-full overflow-hidden text-sm",
+              isHovering && "overflow-y-auto",
             )}
             onMouseEnter={() => setIsHovering(true)}
             onMouseLeave={() => setIsHovering(false)}
@@ -95,7 +95,7 @@ export default function CustomCard({
         </div>
       </CardContent>
       <CardFooter className="flex flex-col gap-2 pt-2">
-        <div className="flex items-center justify-between w-full text-xs text-muted-foreground">
+        <div className="text-muted-foreground flex w-full items-center justify-between text-xs">
           <span>Created: {formattedDate}</span>
           <Badge
             variant={agent.is_public ? "default" : "outline"}
@@ -104,7 +104,11 @@ export default function CustomCard({
             {agent.is_public ? "Public" : "Private"}
           </Badge>
         </div>
-        <Button onClick={onLaunch} size="sm" className="w-full gap-1">
+        <Button
+          onClick={onLaunch}
+          size="sm"
+          className="w-full cursor-pointer gap-1"
+        >
           <Rocket className="h-4 w-4" />
           Launch
         </Button>
